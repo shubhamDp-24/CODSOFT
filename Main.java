@@ -1,127 +1,49 @@
-import java.util.*;
-import java.io.*;
+import java.util.Scanner;
 
 public class Main {
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
-        Random random = new Random();
 
-        int min = 1;  // Default minimum number
-        int max = 100;  // Default maximum number
-        int maxAttempts = 5;  // Maximum attempts allowed
-        int totalScore = 0;  // Total score across rounds
-        boolean playAgain = true;
+        System.out.println("Welcome to the Student Grade Calculator!");
 
-        System.out.println("Welcome to the Enhanced Number Guessing Game!");
-        System.out.println("Try to guess the number within the specified range.");
+        // Step 1: Input - Number of subjects and marks for each subject
+        System.out.print("Enter the number of subjects: ");
+        int numberOfSubjects = scanner.nextInt();
 
-        // Leaderboard file
-        File leaderboardFile = new File("leaderboard.txt");
+        int[] marks = new int[numberOfSubjects];
+        int totalMarks = 0;
 
-        // Game loop for multiple rounds
-        while (playAgain) {
-            System.out.println("\nSelect Difficulty:");
-            System.out.println("1. Easy (Range: 1-50)");
-            System.out.println("2. Medium (Range: 1-100)");
-            System.out.println("3. Hard (Range: 1-200)");
-            System.out.print("Enter your choice (1/2/3): ");
-            int difficulty = scanner.nextInt();
-
-            // Set range based on difficulty
-            switch (difficulty) {
-                case 1 -> {
-                    min = 1;
-                    max = 50;
-                    maxAttempts = 7;
-                }
-                case 2 -> {
-                    min = 1;
-                    max = 100;
-                    maxAttempts = 5;
-                }
-                case 3 -> {
-                    min = 1;
-                    max = 200;
-                    maxAttempts = 3;
-                }
-                default -> System.out.println("Invalid choice! Defaulting to Medium difficulty.");
-            }
-
-            int targetNumber = random.nextInt(max - min + 1) + min;
-            int attempts = 0;
-            boolean guessedCorrectly = false;
-
-            System.out.println("\nStarting a new round!");
-            System.out.println("You have " + maxAttempts + " attempts to guess the number between " + min + " and " + max);
-
-            long startTime = System.currentTimeMillis();  // Start timer
-
-            // Game loop for one round
-            while (attempts < maxAttempts) {
-                System.out.print("Enter your guess: ");
-                int userGuess = scanner.nextInt();
-                attempts++;
-
-                if (userGuess == targetNumber) {
-                    long endTime = System.currentTimeMillis();  // End timer
-                    System.out.println("Congratulations! You guessed the correct number.");
-                    long timeTaken = (endTime - startTime) / 1000;  // Calculate time in seconds
-                    System.out.println("You took " + timeTaken + " seconds to guess the number.");
-
-                    totalScore += (maxAttempts - attempts + 1) * 10;  // Score calculation
-                    guessedCorrectly = true;
-                    break;
-                } else if (userGuess < targetNumber) {
-                    System.out.println("Too low! Try again.");
-                } else {
-                    System.out.println("Too high! Try again.");
-                }
-                System.out.println("Attempts left: " + (maxAttempts - attempts));
-            }
-
-            if (!guessedCorrectly) {
-                System.out.println("Sorry, you've used all your attempts! The correct number was: " + targetNumber);
-            }
-
-            // Ask if the user wants to play another round
-            System.out.print("\nDo you want to play another round? (yes/no): ");
-            String response = scanner.next();
-            playAgain = response.equalsIgnoreCase("yes");
+        System.out.println("Enter the marks obtained in each subject (out of 100): ");
+        for (int i = 0; i < numberOfSubjects; i++) {
+            System.out.print("Marks for subject " + (i + 1) + ": ");
+            marks[i] = scanner.nextInt();
+            totalMarks += marks[i];
         }
 
-        System.out.println("\nGame Over! Your total score is: " + totalScore);
-        saveToLeaderboard(scanner, leaderboardFile, totalScore);
+        // Step 2: Calculate Total Marks and Average Percentage
+        double averagePercentage = (double) totalMarks / numberOfSubjects;
 
-        System.out.println("Leaderboard:");
-        displayLeaderboard(leaderboardFile);
+        // Step 3: Grade Calculation
+        char grade;
+        if (averagePercentage >= 90) {
+            grade = 'A';
+        } else if (averagePercentage >= 80) {
+            grade = 'B';
+        } else if (averagePercentage >= 70) {
+            grade = 'C';
+        } else if (averagePercentage >= 60) {
+            grade = 'D';
+        } else {
+            grade = 'F';
+        }
 
-        System.out.println("Thanks for playing!");
+        // Step 4: Display Results
+        System.out.println("\n--- Results ---");
+        System.out.println("Total Marks: " + totalMarks);
+        System.out.println("Average Percentage: " + String.format("%.2f", averagePercentage) + "%");
+        System.out.println("Grade: " + grade);
+
+        System.out.println("\nThank you for using the Student Grade Calculator!");
         scanner.close();
-    }
-
-    // Save score to leaderboard
-    private static void saveToLeaderboard(Scanner scanner, File leaderboardFile, int totalScore) throws IOException {
-        System.out.print("Enter your name for the leaderboard: ");
-        String playerName = scanner.next();
-
-        // Append to leaderboard file
-        try (FileWriter writer = new FileWriter(leaderboardFile, true)) {
-            writer.write(playerName + ": " + totalScore + "\n");
-        }
-    }
-
-    // Display leaderboard
-    private static void displayLeaderboard(File leaderboardFile) throws IOException {
-        if (!leaderboardFile.exists()) {
-            System.out.println("No leaderboard entries yet.");
-            return;
-        }
-
-        // Read and print leaderboard entries
-        try (Scanner fileScanner = new Scanner(leaderboardFile)) {
-            while (fileScanner.hasNextLine()) {
-                System.out.println(fileScanner.nextLine());
-            }
-        }
     }
 }
