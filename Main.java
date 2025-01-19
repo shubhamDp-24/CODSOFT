@@ -1,106 +1,127 @@
-import java.util.Scanner;
+import java.util.*;
+import java.io.*;
 
-// Class to represent the user's bank account
-class BankAccount {
-    private double balance;
-
-    // Constructor to initialize the account balance
-    public BankAccount(double initialBalance) {
-        this.balance = initialBalance;
-    }
-
-    // Method to deposit money
-    public void deposit(double amount) {
-        if (amount > 0) {
-            balance += amount;
-            System.out.println("Successfully deposited ₹" + amount);
-        } else {
-            System.out.println("Invalid amount. Please enter a positive value.");
-        }
-    }
-
-    // Method to withdraw money
-    public void withdraw(double amount) {
-        if (amount > 0 && amount <= balance) {
-            balance -= amount;
-            System.out.println("Successfully withdrew ₹" + amount);
-        } else if (amount > balance) {
-            System.out.println("Insufficient balance. Transaction failed.");
-        } else {
-            System.out.println("Invalid amount. Please enter a positive value.");
-        }
-    }
-
-    // Method to check balance
-    public double checkBalance() {
-        return balance;
-    }
-}
-
-// Class to represent the ATM machine
-class ATM {
-    private BankAccount account;
-
-    // Constructor to connect the ATM to a bank account
-    public ATM(BankAccount account) {
-        this.account = account;
-    }
-
-    // Method to display the ATM menu
-    public void displayMenu() {
-        System.out.println("\n--- ATM Menu ---");
-        System.out.println("1. Check Balance");
-        System.out.println("2. Deposit Money");
-        System.out.println("3. Withdraw Money");
-        System.out.println("4. Exit");
-        System.out.print("Enter your choice: ");
-    }
-
-    // Method to handle user input and perform transactions
-    public void runATM() {
+public class Main {
+    public static void main(String[] args) throws IOException {
         Scanner scanner = new Scanner(System.in);
-        int choice;
+        Random random = new Random();
 
-        do {
-            displayMenu();
-            choice = scanner.nextInt();
+        int min = 1;  // Default minimum number
+        int max = 100;  // Default maximum number
+        int maxAttempts = 5;  // Maximum attempts allowed
+        int totalScore = 0;  // Total score across rounds
+        boolean playAgain = true;
 
-            switch (choice) {
-                case 1: // Check balance
-                    System.out.println("Your current balance is ₹" + account.checkBalance());
-                    break;
-                case 2: // Deposit money
-                    System.out.print("Enter the amount to deposit: ₹");
-                    double depositAmount = scanner.nextDouble();
-                    account.deposit(depositAmount);
-                    break;
-                case 3: // Withdraw money
-                    System.out.print("Enter the amount to withdraw: ₹");
-                    double withdrawAmount = scanner.nextDouble();
-                    account.withdraw(withdrawAmount);
-                    break;
-                case 4: // Exit
-                    System.out.println("Thank you for using the ATM. Goodbye!");
-                    break;
-                default:
-                    System.out.println("Invalid choice. Please select a valid option.");
+        System.out.println("Welcome to the Enhanced Number Guessing Game!");
+        System.out.println("Try to guess the number within the specified range.");
+
+        // Leaderboard file
+        File leaderboardFile = new File("leaderboard.txt");
+
+        // Game loop for multiple rounds
+        while (playAgain) {
+            System.out.println("\nSelect Difficulty:");
+            System.out.println("1. Easy (Range: 1-50)");
+            System.out.println("2. Medium (Range: 1-100)");
+            System.out.println("3. Hard (Range: 1-200)");
+            System.out.print("Enter your choice (1/2/3): ");
+            int difficulty = scanner.nextInt();
+
+            // Set range based on difficulty
+            switch (difficulty) {
+                case 1 -> {
+                    min = 1;
+                    max = 50;
+                    maxAttempts = 7;
+                }
+                case 2 -> {
+                    min = 1;
+                    max = 100;
+                    maxAttempts = 5;
+                }
+                case 3 -> {
+                    min = 1;
+                    max = 200;
+                    maxAttempts = 3;
+                }
+                default -> System.out.println("Invalid choice! Defaulting to Medium difficulty.");
             }
-        } while (choice != 4);
 
+            int targetNumber = random.nextInt(max - min + 1) + min;
+            int attempts = 0;
+            boolean guessedCorrectly = false;
+
+            System.out.println("\nStarting a new round!");
+            System.out.println("You have " + maxAttempts + " attempts to guess the number between " + min + " and " + max);
+
+            long startTime = System.currentTimeMillis();  // Start timer
+
+            // Game loop for one round
+            while (attempts < maxAttempts) {
+                System.out.print("Enter your guess: ");
+                int userGuess = scanner.nextInt();
+                attempts++;
+
+                if (userGuess == targetNumber) {
+                    long endTime = System.currentTimeMillis();  // End timer
+                    System.out.println("Congratulations! You guessed the correct number.");
+                    long timeTaken = (endTime - startTime) / 1000;  // Calculate time in seconds
+                    System.out.println("You took " + timeTaken + " seconds to guess the number.");
+
+                    totalScore += (maxAttempts - attempts + 1) * 10;  // Score calculation
+                    guessedCorrectly = true;
+                    break;
+                } else if (userGuess < targetNumber) {
+                    System.out.println("Too low! Try again.");
+                } else {
+                    System.out.println("Too high! Try again.");
+                }
+                System.out.println("Attempts left: " + (maxAttempts - attempts));
+            }
+
+            if (!guessedCorrectly) {
+                System.out.println("Sorry, you've used all your attempts! The correct number was: " + targetNumber);
+            }
+
+            // Ask if the user wants to play another round
+            System.out.print("\nDo you want to play another round? (yes/no): ");
+            String response = scanner.next();
+            playAgain = response.equalsIgnoreCase("yes");
+        }
+
+        System.out.println("\nGame Over! Your total score is: " + totalScore);
+        saveToLeaderboard(scanner, leaderboardFile, totalScore);
+
+        System.out.println("Leaderboard:");
+        displayLeaderboard(leaderboardFile);
+
+        System.out.println("Thanks for playing!");
         scanner.close();
     }
-}
 
-// Main class to run the application
-public class Main {
-    public static void main(String[] args) {
-        // Step 1: Initialize the user's bank account with a starting balance
-        BankAccount userAccount = new BankAccount(5000.0); // Example: Initial balance of ₹5000
+    // Save score to leaderboard
+    private static void saveToLeaderboard(Scanner scanner, File leaderboardFile, int totalScore) throws IOException {
+        System.out.print("Enter your name for the leaderboard: ");
+        String playerName = scanner.next();
 
-        // Step 2: Connect the ATM to the user's bank account
-        ATM atm = new ATM(userAccount);
+        // Append to leaderboard file
+        try (FileWriter writer = new FileWriter(leaderboardFile, true)) {
+            writer.write(playerName + ": " + totalScore + "\n");
+        }
+    }
 
-        // Step 3: Run the ATM interface
-        atm.runATM();
+    // Display leaderboard
+    private static void displayLeaderboard(File leaderboardFile) throws IOException {
+        if (!leaderboardFile.exists()) {
+            System.out.println("No leaderboard entries yet.");
+            return;
+        }
+
+        // Read and print leaderboard entries
+        try (Scanner fileScanner = new Scanner(leaderboardFile)) {
+            while (fileScanner.hasNextLine()) {
+                System.out.println(fileScanner.nextLine());
+            }
+        }
     }
 }
